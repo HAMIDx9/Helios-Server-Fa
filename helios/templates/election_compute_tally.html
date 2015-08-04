@@ -1,0 +1,33 @@
+{% extends TEMPLATE_BASE %}
+
+{% block title %}محاسبه شمارش رمزشده برای {{election.name}}{% endblock %}
+
+{% block content %}
+  <h2 class="title">محاسبه شمارش برای انتخابات: {{election.name}}</h2>
+
+<div id="instructions">
+{% if election.num_cast_votes %}
+<p>
+    شما تصمیم به محاسبه شمارش رمزشده برای انتخابات <b>{{election.name}}</b> دارید.
+</p>
+
+<p>
+    هر زمان این کار را انجام دهید، رای‌دهندگان توانایی ارائه رای‌شان را نخواهند داشت.
+</p>
+
+<form method="post" action="" onsubmit="alert('ok, tally has begun')" class="pretty">
+<input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+    
+<input class="pretty" type="submit" value="compute encrypted tally!" />
+<button onclick="document.location='./view'; return false;">لغو</button>
+</form>
+{% else %}
+<p>
+هیچ رای‌ی در این انتخابات ارائه نشده است. حداقل یک رأی می‌بایست ارائه شده باشد تا محاسبه شمارش صورت گیرد.<br /><br />
+<a href="./view">بازگشت به انتخابات</a>
+</p>
+{% endif %}
+</div>
+
+<br /><br />
+{% endblock %}

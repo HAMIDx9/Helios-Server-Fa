@@ -1,0 +1,32 @@
+{% extends "helios/templates/cryptobase.html" %}
+
+{% block content %}
+  <h2 class="title">{{election.name}} امنا &mdash; ا {{trustee.name}} خانه</span></h2>
+
+<p>
+{% if trustee.public_key_hash %}
+شما با موفقیت کلید عمومی خود را بارگزاری کردید. </br>
+اثرانگشت کلید عمومی شما: <b>{{trustee.public_key_hash}}</b>.<br />
+شما می‌توانید <a href="{% url "helios.views.trustee_check_sk" election.uuid trustee.uuid %}"> تأیید کنید که کلید خصوصی صحیح را دارید </a>
+{% else %}
+<a href="{% url "helios.views.trustee_keygenerator" election.uuid trustee.uuid %}">نصب کلید شما</a>
+{% endif %}
+</p>
+
+<p>
+{% if election.encrypted_tally %}
+{% if trustee.decryption_factors %}
+شما با موفقیت رمزگشایی را بارگزاری کردید.
+{% else %}
+    شمارش رمز شده برای این انتخابات آماده است. </br>
+    <a href="{% url "helios.views.trustee_decrypt_and_prove" election.uuid trustee.uuid %}">رمزگشایی با کلید شما</a>
+{% endif %}
+{% else %}
+زمانی که شمارش محاسبه شد، برای ارائه کلید خصوصیتان به منظور عملیات رمزگشایی به اینجا بازگردید. </br>
+شما باید ایمیل همراه با آدرس صفحه متولی را نگه دارید، که شامل اطلاعات مورد نیاز برای بازگشت به اینجا خواهد بود.
+{% endif %}
+</p>
+
+
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+  <h2 class="title">{{election.name}} &mdash; فریزکردن ورقه‌رای</h2>
+<p>
+زمانی که ورقه‌رای ثابت (فریز) شود، سؤالات و تنظیمات قابل تغییر نخواهند بود. </br> لیست امنا و کلید‌های عمومی آن‌ها نیز غیر قابل تغییر خواهند بود.
+</p>
+
+<p>
+{% if election.openreg %}
+ثبت‌نام برای انتخابات شما در حال حاضر <b>باز</b> است، بدین معنی‌است که هر فردی قادر به شرکت در رای‌گیری است، حتی پس از فریز کردن ورقه‌رای.
+{% else %}
+ثبت‌نام برای انتخابات شما در حال حاضر <b>بسته</b> است، بدین معنی‌است که تنها رای‌دهندگانی که شما مشخص کرده‌اید توانایی ارائه رأی خواهند داشت. به عنوان مدیر، شما همچنان قادر به ویرایش لیست رأی‌دهندگان در حالی که انتخابات پیش می‌رود هستید.
+{% endif %}
+</p>    
+
+{% if helios.VOTERS_EMAIL %}
+<p>
+شما می‌بایست ورقه‌رای را قبل از اینکه بتوانید به رای‌دهندگان اطلاع دهید، ثابت(فریز) کنید.
+</p>
+{% endif %}
+
+{% if issues_p %}
+<p>
+    قبل از اینکه بتوانید انتخابات را ثابت (فریز) کنید، شما به موارد زیر نیاز دارید: 
+    <ul>
+        {% for issue in issues %}
+        <li>{{issue.action}}</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url "helios.views.one_election_view" election.uuid %}">برگرد به انتخابات</a>
+</p>
+{% else %}
+<form method="post" action="">
+<input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+    
+<input class="button" type="submit" value="فریز‌کردن ورقه‌رای‌ها" />
+<button onclick="document.location='./view'; return false;">لغو</button>
+</form>
+{% endif %}
+
+<br /><br />
+{% endblock %}

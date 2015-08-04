@@ -1,0 +1,14 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+
+  <h2 class="title">انتخابات {{election.name}} هم‌اکنون شمارش شده است.</h2>
+
+  <p>
+  این انتخابات هم‌اکنون شمارش شده است، شما قادر به ارائه یک رأی نیستید.
+  </p>
+  
+  <p>
+      <a href="{% url "helios.views.one_election_view" election.uuid %}">مشاهده شمارش انتخابات</a>
+  </p>
+{% endblock %}

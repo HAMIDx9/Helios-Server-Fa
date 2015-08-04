@@ -1,0 +1,154 @@
+{% extends "helios/templates/cryptobase.html" %}
+{% block content %}
+<script language="javascript">
+
+var PUBLIC_KEY, PROOF;
+
+function clear_keys() {
+    $('#sk_download').hide();
+    $('#pk_form').hide();
+    $('#buttons').show();
+    $('#clear_button').hide();
+    $('#reuse').hide();
+}
+
+function show_key_reuse() {
+    $('#generator').hide();
+    $('#reuse').show();
+}
+
+SECRET_KEY = null;
+
+function reuse_key(secret_key_text) {
+    SECRET_KEY = ElGamal.SecretKey.fromJSONObject(jQuery.secureEvalJSON(secret_key_text));
+
+    $('#reuse').hide();
+    setup_public_key_and_proof();
+    show_pk();
+}
+
+// start collecting some local randomness
+sjcl.random.startCollectors();
+
+$(document).ready(function() {
+    clear_keys();
+    $('#generator').hide();
+
+    // get some more server-side randomness for keygen
+    $.getJSON('../../get-randomness', function(result) {
+       sjcl.random.addEntropy(result.randomness);
+       BigInt.setup(function() {
+          ELGAMAL_PARAMS = ElGamal.Params.fromJSONObject({{eg_params_json|safe}});
+          $('#waiting_message').hide();
+          $('#generator').show();
+       });
+    });
+});
+
+
+function generate_keypair() {
+    $('#buttons').hide();
+    
+    try {
+        SECRET_KEY = ELGAMAL_PARAMS.generate();
+    } catch (e) {
+        alert(e);
+    }
+
+    setup_public_key_and_proof();
+}
+
+function setup_public_key_and_proof() {    
+    // generate PoK of secret key
+    PROOF = SECRET_KEY.proveKnowledge(ElGamal.fiatshamir_dlog_challenge_generator);
+    PUBLIC_KEY = SECRET_KEY.pk;
+
+    var pk_val = jQuery.toJSON({'pok': PROOF, 'public_key': PUBLIC_KEY});
+    $('#pk_textarea').val(pk_val);
+    $('#pk_hash').html(b64_sha256(jQuery.toJSON(PUBLIC_KEY)));
+
+    $('#clear_button').show();
+    show_sk();
+}
+
+function show_sk() {
+    $('#sk_download').show();
+}
+
+function download_sk() {
+    UTILS.open_window_with_content(jQuery.toJSON(SECRET_KEY), "application/json");
+}
+
+function show_pk() {
+    $('#sk_download').hide();
+    $('#pk_hash').show();
+    $('#pk_form').show();
+}
+
+</script>
+
+<h2 class="title">{{election.name}} &mdash; متولی {{trustee.name}} &mdash; ساخت کلید</h2>
+
+<p>
+  به عنوان یک متولی، زمان آن‌است که کلید‌های خود را برای انتخابات ارائه دهید (بسازید).
+</p>
+
+<p id="waiting_message">
+لطفاً برای بارگزاری سازنده کلید صبر کنید...
+</p>
+
+<p id="generator">
+
+<span id="buttons"><button onclick="generate_keypair(); return false;" id="generate_button">ساخت کلید‌های انتخابات</button></span>
+
+<br /><br />
+اگر شما در حال حاضر یک جفت‌کلید تولید کرده‌اید، شما می‌توانید <a href="javascript:show_key_reuse()">مجددا از آن استفاده کنید.</a>.
+</p>
+
+<div id="reuse">
+<h3>استفاده مجدد از کلید</h3>
+
+<p>
+کلیدخصوصی خود را به صورت کامل در زیر وارد کنید:
+</p>
+<form onsubmit="reuse_key(this.secret_key.value); return false;">
+<textarea cols="80" rows="5" wrap="soft" name="secret_key">
+</textarea>
+<br />
+<input type="submit" value="reuse" />
+</form>
+</div>
+
+<div id="sk_download">
+<h3>کلید خصوصی شما</h3>
+<span id="clear_button">
+کلید شما تولید شده است، اما اگر ترجیح می‌دهید می‌توانید <a href="javascript:clear_keys();">آن را از حافظه پاک و مجدداً از ابتدا شروع کنید</a> <br>
+</span>
+
+<p>
+    <button style="font-size:16pt;" onclick="download_sk(); $('#pk_link').show();">ذخیره کلید خصوصی شما</button>
+</p>
+
+<p style="display: none;" id="pk_link">
+  <a href="javascript:show_pk();">بسیار خوب، ما کلید شما را ذخیره کرده‌ایم، بگذارید ادامه دهیم.</a>.
+</p>
+</div>
+
+<form method="post" id="pk_form" action="{% url "helios.views.trustee_upload_pk" election.uuid trustee.uuid %}">
+<h3>کلید عمومی شما</h3>
+<p>
+    حال شما می‌بایست کلید عمومی خود را در سرور بارگزاری کنید.
+</p>
+<p>
+    اثر انگشت کلید عمومی شما: <tt id="pk_hash" style="font-size: 1.5em; font-weight: bold;"></tt>.<br />
+شما می‌توانید آن را ذخیره‌ کنید تا مطمئن شوید که کلید عمومی‌تان به درستی توسط سرور ذخیره شده‌است.</br>
+(کلید عمومی شما در حال حاضر نمایش داده نمی‌شود به این دلیل که شما نیازی به ذخیره آن ندارید، اثرانگشت در اینجا کفایت می‌کند.)
+</p>
+<textarea id="pk_textarea" name="public_key_json" cols="80" rows="10" style="display:none;">
+</textarea>
+<input type="submit" value="کلید عمومی خود را بارگزاری کنید">
+</form>
+
+<div id="applet_div"></div>
+<br /><br />
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+
+  <h2 class="title">انتخابات {{election.name}} هنوز باز نشده‌است</h2>
+
+  <p>
+      این انتخابات هنوز باز نشده‌است. شما احتمالا از نمایش ورقه‌رای به اینجا رسیده‌اید.
+  </p>
+  
+  <p>
+      <a href="{% url "helios.views.one_election_view" election.uuid %}">بازگشت به انتخابات</a>
+  </p>
+{% endblock %}

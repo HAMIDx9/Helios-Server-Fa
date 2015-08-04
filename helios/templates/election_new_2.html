@@ -1,0 +1,91 @@
+{% extends "helios/templates/cryptobase.html" %}
+
+{% block content %}
+<script language="javascript">
+
+var SECRET_KEY;
+
+function before_create() {
+{% ifequal election_type "one" %}
+    return confirm('آیا شما نسخه‌ای از کلید خصوصی‌تان را در جای امنی ذخیره کرده‌اید؟\n\n زمانی که شما تأیید را کلیک کنید، هلیوس قادر به بازیابی کلید خصوصی شما به جز کمک خودتان نیست!');
+{% else %}
+    return true;
+{% endifequal %}
+}
+
+function generate_keypair() {
+    ELGAMAL_PARAMS = ElGamal.Params.fromJSONObject({{eg_params_json|safe}});
+
+    $('#generate_button').hide();
+    
+    try {
+        SECRET_KEY = ELGAMAL_PARAMS.generate();
+    } catch (e) {
+        alert(e);
+    }
+
+    $('#pk').val(jQuery.toJSON(SECRET_KEY.pk));
+    
+{% ifequal election_type "one" %}
+    $('#sk_textarea').val(jQuery.toJSON(SECRET_KEY));
+    $('#sk_form').show();
+{% else %}
+{% ifequal election_type "helios" %}
+    $('#sk').val(jQuery.toJSON(SECRET_KEY));
+{% endifequal %}
+{% endifequal %}
+
+    $('#submit').show();
+}
+
+$(document).ready(function() {
+{% ifnotequal election_type "multiple" %}
+    $('#submit').hide();
+{% endifnotequal %}
+    $('#sk_form').hide();
+});
+</script>
+
+  <h2 class="title">ساخت یک انتخابات جدید: {{name}}</h2>
+{% ifequal election_type "helios" %}
+  <b>یک انتخابات مدیریت شده توسط هلیوس</b>.
+{% else %}
+{% ifequal election_type "one" %}
+  <b>یک انتخابات مدیریت شده توسط خودتان، به عنوان تنها مدیر</b>.
+{% else %}
+<b>یک انتخابات مدیریت شده توسط امنا (چندین متولی)</b>.
+{% endifequal %}
+{% endifequal %}
+  <form class="prettyform" action="{% url "helios.views.election_new_3" %}" method="POST" id="create_election_form" onsubmit="return before_create();">
+      <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+      <input type="hidden" name="name" value="{{name}}" />
+      <input type="hidden" name="public_key" id="pk" value="" />
+      <input type="hidden" name="private_key" id="sk" value="" /><br />
+
+{% ifnotequal election_type "multiple" %}
+  <label for="generate_key">&nbsp;</label><button onclick="generate_keypair(); return false;" id="generate_button">تولید کلید‌های انتخابات</button>
+{% else %}
+<div id="trustees">
+<h3>امنا (تا ۵ نفر)</h3>
+<label for="">&nbsp;</label> <input type="text" name="trustee" /><br />
+<label for="">&nbsp;</label> <input type="text" name="trustee" /><br />
+<label for="">&nbsp;</label> <input type="text" name="trustee" /><br />
+<label for="">&nbsp;</label> <input type="text" name="trustee" /><br />
+<label for="">&nbsp;</label> <input type="text" name="trustee" /><br />
+</div>
+{% endifnotequal %}
+<br /><br />
+<label for="">&nbsp;</label>  <input type="submit" value="ساخت" id="submit" />
+  </form>
+  <br /><br />
+{% ifequal election_type "one" %}
+  <form style="padding-left: 200px;" id="sk_form" onsubmit="return false;">
+      <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+      کلید خصوصی انتخابات شما:<br />
+      <label for="">&nbsp;</label>
+      <textarea id="sk_textarea" cols="60" rows="5">
+      </textarea><br />
+      (شما باید یک نسخه از این کلید را در جای امنی نگه‌داری کنید </br> در غیر این صورت قادر به شمارش انتخابات نخواهید بود.)
+  </form>
+{% endifequal %}
+{% endblock %}

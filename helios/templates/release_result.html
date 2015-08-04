@@ -1,0 +1,16 @@
+{% extends TEMPLATE_BASE %}
+
+{% block title %}ارائه نتاارائه نتیجه &mdash; {{election.name}}{% endblock %}
+{% block content %}
+  <h2 class="title">{{election.name}} &mdash; ارائه نتیجه <span style="font-size:0.7em;">[<a href="{% url "helios.views.one_election_view" election.uuid %}">لغو</a>]</span></h2>
+
+  <p>
+    شما تصمیم به ارائه نتیجه برای این انتخابات دارید.
+  </p>
+
+  <form method="POST" action="">
+    <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+    <input type="submit" value="ارائه نتیجه!" />
+  </form>
+
+{% endblock %}

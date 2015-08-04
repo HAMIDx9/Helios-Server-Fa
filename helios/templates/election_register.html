@@ -1,0 +1,27 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+  <h2 class="title">{{ election.name }} – ثبت‌نام</h2>
+
+{% if user %}
+<p>
+    شما در حال حاضر به عنوان {{user.user_id}} [{{user.user_type}}] وارد شده‌اید.
+</p>
+{% if voter %}
+<p>
+   شما در حال حاضر در این انتخابات ثبت‌نام کرده‌اید.
+</p>
+{% else %}
+<p>
+    شما در این انتخابات ثبت‌نام <em>نشده‌اید</em>.
+</p>
+
+<form method="post" action="{% url "helios.views.one_election_register" election.uuid %}">
+<input type="submit" value="ثبت‌نام!" />
+</form>
+{% endif %}
+
+{% else %}
+{% endif %}
+
+{% endblock %}

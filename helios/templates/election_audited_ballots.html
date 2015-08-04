@@ -1,0 +1,45 @@
+{% extends TEMPLATE_BASE %}
+
+{% block title %}بررسی ورقه رأی برای {{election.name}}{% endblock %}
+
+{% block content %}
+  <h2 class="title">{{election.name}} &mdash; ورقه رای‌های بررسی شده <span style="font-size:0.7em;">[<a href="{% url "helios.views.one_election_view" election_uuid=election.uuid %}">بازگشت به انتخابات</a>]</span></h2>
+
+<p>
+زمانی که شما یک ورقه رأی با هلیوس مهیا می‌کنید، بالافاصله یک شماره ردیابی هوشمند ورقه رأی دریافت می‌کنید. قبل از ارائه ورقه رأی، شما این امکان را دارید تا از هلیوس بخواهید ورقه‌رای رمزشده را بشکند و تأیید کند که هلیوس ورقه رأی شما را صحیح رمز کرده است.  پس از انجام این کار، شما می‌توانید ورقه‌رای باز شده خود را در اینجا، در لیست ورقه‌های بررسی شده قرار دهید تا دیگران بتوانند تأیید کنند (مشخصات شما ارائه نخواهد شد). پس از این مرحله، شما میبایست انتخابتان را مجدداً رمز کرده و شماره ردیابی هوشمند دیگری دریافت کنید. این مورد به شما کمک می‌کند تا شانس اینکه کسی بخواهد شما را وادار به ارائه رای‌ی جز رأی مورد نظر شما کند کمتر شود.
+</p>
+
+<p>
+این رأی‌ها <em> ارائه نمی‌شوند</em> و محاسبه نخواهند شد و تنها برای بررسی و اینکه هلیوس عملیات رمز کردن انتخاب‌های کاربر را به درستی آنجا می‌دهد وجود دارند.
+</p>
+
+<p>
+  برای تأیید یک ورقه رأی بررسی شده، تمام محتویاتش را نسخه برداری (کپی) کنید و در <a target="_new" href="/booth/single-ballot-verify.html?election_url={% url "helios.views.one_election" election.uuid %}">تاییدکننده ورقه رای</a> قرار دهید.
+</p>
+
+{% if audited_ballots %}
+<p>
+ورقه‌های بررسی شده {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
+</p>
+
+{% if next_after %}
+<a href="?after={{next_after}}&offset={{offset_plus_limit}}">بعدی {{limit}}</a> &nbsp;&nbsp;
+{% endif %}
+
+{% ifequal offset 0 %}
+{% else %}
+<a href="?">بازگشت به ابتدا</a> &nbsp;&nbsp;
+{% endifequal %}
+{% if more_p %}
+<a href="?after={{next_after}}&offset={{next_offset}}">بعدی {{limit}}</a>
+{% endif %}
+<table class="pretty">
+{% for b in audited_ballots %}
+<tr><td><tt style="font-size: 1.4em;">{{b.vote_hash}}</tt> [<a target="_blank" href="?vote_hash={{b.vote_hash|urlencode}}">مشاهده</a>]</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<em>هیچ ورقه بررسی شده‌ای وجود ندارد.</em>
+{% endif %}
+
+{% endblock %}

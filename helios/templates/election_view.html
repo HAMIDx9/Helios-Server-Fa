@@ -1,0 +1,298 @@
+{% extends TEMPLATE_BASE %}
+{% block title %}{{election.name}}{% endblock %}
+{% block content %}
+<div style="float: left; margin-right: 50px;">
+  <h3 class="title">{{ election.name }}
+{% if admin_p %}
+{% if not election.frozen_at %}
+<small><a class="small button" href="{% url "helios.views.one_election_edit" election.uuid %}">ویرایش</a></small>
+{% endif %}
+{% endif %}</h3>
+<p style="padding-top:0px; margin-top:0px">
+<em>{% if election.private_p %}خصوصی{%else%}عمومی{% endif %}</em>{% if settings.SHOW_USER_INFO %} ساخته شده توسط <u><b>{{election.admin.display_html_small|safe}}</b></u>{% endif %}
+{% if election.is_archived %}
+[بایگانی شده]
+{% endif %}
+{% if admin_p %}
+&nbsp;{% if election.is_archived %}<a class="small button" href="{% url "helios.views.one_election_archive" election_uuid=election.uuid %}?archive_p=0">unarchive it</a>{% else %}<a class="small button" href="{% url "helios.views.one_election_archive" election_uuid=election.uuid %}?archive_p=1">بایگانی کردن</a>{% endif %}
+{% endif %}
+<br />
+{% if admin_p %}
+{% if not election.private_p %}
+{% if election.featured_p %}
+این انتخابات در صفحه نخست نمایش داده می‌شود.
+{% if can_feature_p %}
+[<a href="{% url "helios.views.one_election_set_featured" election.uuid %}?featured_p=0">لغو نمایش</a>]
+{% endif %}
+{% else %}
+این انتخابات در صفحه نخست نشان داده <u>نخواهد شد.</u>
+{% if can_feature_p %}
+[<a href="{% url "helios.views.one_election_set_featured" election.uuid %}?featured_p=1">اعمال نمایش</a>]
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+</p>
+
+</div>
+
+
+<br /><br />
+
+<br clear="left" />
+
+<div style="margin-bottom: 25px; ">
+{{election.description_bleached|safe}}
+</div>
+
+{% if election.election_info_url %}
+<p style="font-size:1.5em;">[<a target="_blank" href="{{election.election_info_url}}">download candidate bios &amp; statements</a>]</p>
+{% endif %}
+
+<p align="center" style="font-size: 1.5em;">
+<a href="{% url "helios.views.one_election_questions" election.uuid %}">سوال‌ها ({% if election.questions %}{{election.questions|length}}{% else %}0{% endif %})</a>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+<a href="{% url "helios.views.voters_list_pretty" election.uuid %}">رای‌دهنده‌ها &amp; ورقه رای‌ها</a>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+<a href="{% url "helios.views.list_trustees_view" election.uuid %}">امنا ({{trustees|length}})</a>
+</p>
+
+{% if admin_p %}
+{% if election.frozen_p %}
+<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 720px;" class="round">
+<a href="#" onclick="$('#badgebody').slideToggle(250);">Embed an Election Badge</a>
+<div id="badgebody" style="display:none;">
+<br />
+<form action="#">
+<textarea cols="90" rows="4" wrap="soft">&lt;iframe src="{{election_badge_url}}" frameborder="0" style="border: 1px solid black" height="75" width="200"&gt;
+&lt;/iframe&gt;</textarea><br />
+<p style="font-size:0.8em;">adding this HTML to your site displays a thin banner with direct links to voting.</p>
+</form>
+</div>
+</div>
+{% endif %}
+<p>
+
+{% if election.result_released_at %}
+
+<!-- election complete, no next step -->
+
+{% else %}
+<b>مرحله بعد: </b>
+<span style="font-size: 1.3em;">
+{% if not election.frozen_at %}
+{% if election.issues_before_freeze %}
+{% for issue in election.issues_before_freeze %}
+{{issue.action}}{% if forloop.last %}{% else %} و {% endif %}<br />
+{% endfor %}
+{% else %}
+<a href="{% url "helios.views.one_election_freeze" election.uuid %}">فریز کردن ورقه‌های رای و باز کردن انتخابات</a>
+<br />
+{% if election.voting_starts_at %}
+زمانی که شما این عمل را انجام دادید، انتخابات برای رای‌گیری در {{election.voting_starts_at}}، بر اساس تنظیمات مورد نظر شما آماده و باز خواهد شد.
+{% else %}
+به محض انتخاب این عمل، انتخابات برای رای‌گیری باز خواهد شد.
+{% endif %}
+{% endif %}
+
+{% else %}
+
+{% if not election.encrypted_tally %}
+{% if election.tallying_started_at %}
+محاسبات شمارش در حال انجام است.<br />
+صفحه را چند دقیقه دیگر مجددا بارگزاری کنید.
+{% else %}
+<a href="{% url "helios.views.one_election_compute_tally" election.uuid %}">محاسبه شمارش رمزشده</a><br />
+رای‌های رمزشده در یک ورقه رمزشده قرار داده خواهد شد. در صورت اعمال این گزینه <br />
+از امنا درخواست می‌شود تا اشتراک رمزگشایی‌شان را ارائه کنند.
+{% endif %}
+{% else %}
+
+{% if election.result %}
+<a href="{% url "helios.views.release_result" election.uuid %}">آزاد کردن نتیجه</a><br />
+نتیجه نمایش داده شده در زیر تنها برای شما قابل رویت است.<br />
+در صورت آزاد کردن، نتیجه برای همه قابل رویت خواهد بود.
+{% else %}
+
+{% if election.ready_for_decryption_combination %}
+<a href="{% url "helios.views.combine_decryptions" election.uuid %}">
+{% if election.num_trustees == 1 %}
+محاسبه نتایج
+{% else %}
+ترکیب رمزگشایی امنا و محاسبه نتایج
+{% endif %}
+</a><br />
+{% if election.num_trustees == 1 %}
+نتیجه تنها برای مدیریت (شما) محاسبه و نمایش داده خواهد شد.
+{% else %}
+اشتراک رمز‌گشایی امنا با هم ترکیب و شمارش محاسبه خواهد شد. <br />
+در صورت اعمال این گزینه، شمارش تنها به شما، مدیریت، نمایش داده خواهد شد.
+{% endif %}
+{% else %}
+<a href="{% url "helios.views.list_trustees_view" election.uuid %}">امنا (برای رمزگشایی)</a>
+{% endif %}
+
+{% endif %}
+
+{% endif %}
+
+{% endif %}
+</span>
+
+{% endif %}
+
+</p>
+
+{% endif %}
+
+<br />
+
+{% if show_result %}
+{% if election.result_released_at %}
+<span class="highlight-box round">
+    این انتخابات به اتمام رسید.
+</span><br /><br /><br />
+{% endif %}
+
+<h3 class="highlight-box">شمارش</h3>
+{% for question in election.pretty_result %}
+<b><span style="font-size:0.8em;">سوال #{{forloop.counter}}</span><br />{{question.question}}</b><br />
+<table class="pretty" style="width: auto;">
+{% for answer in question.answers %}
+<tr><td style="padding-right:80px;{% if answer.winner %}font-weight:bold;{% endif %}">{{answer.answer}}</td><td align="right" style="{% if answer.winner %}font-weight:bold;{% endif %}">{{answer.count}}</td></tr>
+{% endfor %}
+</table>
+{% endfor %}
+
+{% else %}
+
+{% if election.voting_has_stopped %}
+<span class="highlight-box round">
+    انتخابات بسته شد. نتایج به زودی ارائه می‌شود.
+</span><br /><br />
+{% else %}
+
+{% if election.voting_has_started %}
+<a class="button" href="{{test_cookie_url}}">در این انتخابات رای دهید </a>
+<br />
+<br />
+{% if election.voting_extended_until %}
+این انتخابات در ابتدا برای اتمام در {{election.voting_ends_at}} (UTC)، برنامه‌ریزی شد بود. <br />
+اما تا { election.voting_extended_until }} (UTC) تمدید شده است.
+{% else %}
+{% if election.voting_ends_at %}
+<br />
+این انتخابات در {{election.voting_ends_at}} (UTC) برای اتمام برنامه‌ریزی شده است.
+{% else %}
+این انتخابات با تصمیم مدیریت پایان می‌پذیرد.
+{% endif %}
+<br />
+{% endif %}
+
+{% if election.private_p and voter %}
+<br />
+این انتخابات  <em>خصوصی</em> است. شما به عنوان <em>{{voter.name}}</em> رای‌دهنده واجد شرایط مشخص شده اید.
+{% endif %}
+
+<div class="highlight-box round" style="font-size: 1.2em; margin-right: 400px; display:none;" id="nojava_message">
+  You do not have Java installed in your browser.<br />At this time, Helios requires Java.<br />
+  Visit <a target="_new" href="http://java.sun.com">java.sun.com</a> to install it.
+</div>
+<br />
+{% else %}
+<span class="highlight-box round">
+  رای‌گیری هنوز باز نشده‌است.
+</span> <br /><br />
+{% endif %}
+
+{% if user %}
+{% if voter %}
+<p style="padding-top:1px;">
+  شما برای رای‌دادن در این انتخابات ثبت نام شده اید.
+{% if election.use_voter_aliases %}
+نام مستعار رای‌دادن شما {{voter.alias}} است.
+{% endif %}
+</p>
+
+{% else %}
+{% if election.result %}
+{% else %}
+{% if election.openreg %}
+{% if eligible_p %}
+شما واجد شرایط برای رأی‌دادن در این انتخابات هستید.
+{% else %}
+شما <em>واجد شرایط</em> برای رای‌دادن در این انتخابات نیستید.
+{% endif %}
+{% else %}
+شما <em>واجد شرایط</em> برای رای‌دادن در این انتخابات نیستید.
+<br />
+{% endif %}
+{% endif %}
+{% endif %}
+{% else %}
+
+{% if election.openreg %}
+{% if election.eligibility %}
+This election is open to: {{election.pretty_eligibility|safe}}
+برای بررسی واجد شرایط بودن، <a href="{{settings.SECURE_URL_HOST}}{% url "helios_auth.views.index" %}?return_url={{CURRENT_URL}}">وارد شوید.</a>.
+{% else %}
+هر فردی می‌تواند در این انتخابات رای‌دهد.
+{% endif %}
+{% endif %}
+
+{% endif %}
+
+{% endif %}
+
+{% endif %}
+
+
+<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 720px;" class="round">
+<a href="#" onclick="$('#auditbody').slideToggle(250);">بررسی اطلاعات</a>
+<div id="auditbody" style="display:none;">
+<br />آدرس انتخابات:<br />
+<tt style="font-size: 1.2em;"><a href="{{election.url}}">{{election.url}}</a></tt>
+
+{% if election.frozen_at %}
+<br />
+<br />اثرانگشت انتخابات:<br />
+<tt style="font-size: 1.3em; font-weight: bold;">{{election.hash}}</tt>
+
+
+{% if votes %}
+<p>شماره ردیابی ورقه رأی هوشمند شما:<br />
+<tt style="font-size:14pt; font-weight: bold;">{{votes.0.vote_hash}}</tt>
+</p>
+{% endif %}
+
+<p style="font-size: 1.3em;">
+<a href="{% url "helios.views.voters_list_pretty" election.uuid %}">مرکز ردیابی ورقه رای</a> &nbsp;| &nbsp;
+<a href="{% url "helios.views.one_election_audited_ballots" election.uuid %}">ورقه رای‌های بررسی شده</a>
+</p>
+
+{% endif %}
+
+{% if not election.voting_has_started %}
+<p style="font-size: 1.2em;">
+  <a href="{{SECURE_URL_HOST}}/booth/vote.html?election_url={% url "helios.views.one_election" election.uuid %}">نمایش غرفه</a>
+</p>
+{% endif %}  
+
+{% if election.voting_has_stopped %}
+<p style="font-size: 1.2em;">
+{% if election.result %}
+تایید <a target="_blank" href="/verifier/verify.html?election_url={% url "helios.views.one_election" election.uuid %}">شمارش انتخابات</a>.
+{% endif %}
+
+مرور <a href="{{vote_url}}">غرفه رای</a>.
+</p>
+
+{% endif %}
+
+</div>
+</div>
+
+
+
+
+{% endblock %}

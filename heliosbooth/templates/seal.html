@@ -1,0 +1,56 @@
+
+{#if $T.election_metadata.use_advanced_audit_features}
+<div style="float: right; background: lightyellow; margin-left: 20px; padding: 0px 10px 10px 10px; border: 1px solid #ddd; width:200px;">
+<h4><a onclick="$('#auditbody').slideToggle(250);" href="#">بررسی</a> <span style="font-size: 0.8em; color: #444">[اختیاری]</span></h4>
+<div id="auditbody" style="display:none;">
+<p>
+اگر این مورد را انتخاب کنید، شما می‌توانید ورقه‌رای خود را بررسی و چگونگی رمز‌شدن انتخاب‌هایتان را آشکار کنید.
+</p>
+<p>
+سپس شما برای رمز‌کردن مجدد انتخاب‌هایتان در ارائه نهایی راهنمایی خواهید شد.
+</p>
+<input type="button" value="تایید رمزنگاری" onclick="BOOTH.audit_ballot();" class="pretty" />
+</p>
+</div>
+</div>
+{#/if}
+
+<h3>بررسی ورقه‌رای شما</h3>
+
+
+<div style="padding: 10px; margin-bottom: 10px; background-color: #eee; border: 1px #ddd solid; max-width: 340px;">
+{#foreach $T.questions as question}
+
+<b>سوال #{$T.question$index + 1}: {$T.question.short_name}</b><br>
+{#if $T.choices[$T.question$index].length == 0}
+<div style="margin-left: 15px;">&#x2610; <i>هیچ گزینه‌ای انتخاب نشده است.</i></div>
+{#/if}
+{#foreach $T.choices[$T.question$index] as choice}
+<div style="margin-left: 15px;">&#x2713; {$T.choice}</div>
+{#/for}
+{#if $T.choices[$T.question$index].length < $T.question.max}
+[you under-voted: you may select up to {$T.question.max}]
+{#/if}
+[<a onclick="BOOTH.show_question({$T.question$index}); return false;" href="#">ویرایش پاسخ‌ها</a>]
+{#if !$T.question$last}<br><br>{#/if}
+{#/for}
+</div>
+
+
+<p><p>شماره ردیابی ورقه‌رای شما: <b><tt style="font-size: 11pt;">{$T.encrypted_vote_hash}</tt></b>, and you can <a onclick="BOOTH.show_receipt(); return false;" href="#">آن را چاپ کنید.</a><br /><br /></p>
+
+<p>
+زمانی که شما از کلید «ثبت» استفاده کنید، نسخه رمزگذاری نشده ورقه‌رای شما نابود خواهد شد، و تنها نسخه رمزشده باقی خواهد ماند. نسخه رمزشده در سرور هلیوس ثبت خواهد شد.</p>
+
+<button id="proceed_button" onclick="BOOTH.cast_ballot();">ثبت این رای!</button><br />
+<div id="loading_div"><img src="loading.gif" id="proceed_loading_img" /></div>
+
+
+
+<form method="POST" action="{$T.cast_url}" id="send_ballot_form" class="prettyform">
+<input type="hidden" name="election_uuid" value="{$T.election_uuid}" />
+<input type="hidden" name="election_hash" value="{$T.election_hash}" />
+<textarea name="encrypted_vote" style="display: none;">
+{$T.encrypted_vote_json}
+</textarea>
+</form>

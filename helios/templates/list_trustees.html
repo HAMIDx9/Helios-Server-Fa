@@ -1,0 +1,71 @@
+{% extends "helios/templates/cryptobase.html" %}
+
+{% block title %}امنا برای {{election.name}}{% endblock %}
+
+{% block content %}
+  <h3 class="title">{{election.name}} &mdash; امنا <span style="font-size:0.7em;">[<a href="{% url "helios.views.one_election_view" election.uuid %}">بازگشت به انتخابات</a>]</span></h3>
+
+<p>
+    امنا مسئول رمزگشایی نتیجه انتخابات هستند.</ br>
+هر متولی یک‌ جفت‌کلید تولید می‌کنید و قسمت عمومی را در هلیوس بارگزاری می‌کند. <br />
+زمان رمزگشایی، هر متولی باید کلید خصوصی‌اش را ارائه دهد.
+</p>
+
+{% if not election.frozen_at %}
+
+<p>
+  هلیوس به صورت خودکار اولین متولی شما است و پروسه تولید جفت کلید و رمزگشایی را به صورت خودکار انجام می‌دهد.<br />
+شما می‌توانید متولی دیگری در صورت نیاز اضافه کنید، همچنین می‌توانید متولی هلیوس را حذف کنید. <br /> در هر حال، ما تنها در صورتی این مورد را پیشنهاد می‌کنیم که درک درستی از وظیفه متولی داشته باشید.
+</p>
+
+{% if admin_p %}
+<p>
+    [ <a onclick="return(confirm('اضافه کردن متولی خودتان نیازمند مقداری کار بیشتر برای شمارش انتخابات است.\n امنا باید جفت کلیدها را تولید و کلید خصوصی‌شان را در جای امنی محافظت کنند.\n\n اگر شما مطمئن نیستید این به چه معناست، ما قویاً پیشنهاد می‌کنیم\n لغو را کلید کنید و به هلیوس اجازه دهید انتخابات را برای شما شمارش کند.'));" href="{% url "helios.views.new_trustee" election.uuid %}">اضافه کردن یک متولی</a> ]
+</p>
+{% if not election.has_helios_trustee %}
+<p>
+    <a href="{% url "helios.views.new_trustee_helios" election.uuid %}">اضافه کردن هلیوس به عنوان متولی</a>
+</p>
+{% endif %}
+{% endif %}
+
+{% endif %}
+
+{% if not trustees|length %}
+
+{% else %}
+{% for t in trustees %}
+<h5> متولی #{{forloop.counter}}: {{t.name}} 
+{% if admin_p %}
+{% if t.secret_key %}
+{% if not election.frozen_at %}[<a onclick="return confirm('آیا شما مطمئنید که می‌خواهید هلیوس را به عنوان متولی حذف کنید؟');" href="{% url "helios.views.delete_trustee" election.uuid %}?uuid={{t.uuid}}">x</a>]{% endif %}
+{% else %}
+({{t.email}})
+{% if not election.frozen_at %}[<a onclick="return confirm('برای حذف این متولی مطمئنید؟');" href="{% url "helios.views.delete_trustee" election.uuid %}?uuid={{t.uuid}}">x</a>]{% endif %}
+[<a onclick="return confirm('ایا شما برای ارسال صفحه مدیریت این متولی اطمینان دارید؟');" href="{% url "helios.views.trustee_send_url" election.uuid t.uuid %}">ارسال مشخصات ورود</a>]
+{% endif %}
+{% endif %}
+</h5>
+
+<p>
+{% if t.public_key_hash %}
+  اثرانگشت کلید عمومی: <tt style="font-size:1.5em;">{{t.public_key_hash}}</tt>
+{% else %}
+هیچ کلید عمومی بارگزاری نشده‌است.
+{% endif %}
+</p>
+
+{% if election.encrypted_tally %}
+{% if t.decryption_factors %}
+<b>سابقه شمارش برای این متولی.</b>
+{% else %}
+<em>برای شمارش این متولی صبر کنید.</em>
+{% endif %}
+{% endif %}
+</li>
+{% endfor %}
+</ul>
+
+{% endif %}
+
+{% endblock %}

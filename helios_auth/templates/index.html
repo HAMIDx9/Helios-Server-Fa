@@ -1,0 +1,17 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+<h1>احراز هویت</h1>
+
+{% if user %}
+<p style="font-size: 1.4em;">
+    شما هم‌اکنون به عنوان <br /><b>{{user.user_id}}</b> توسط <b>{{user.user_type}}</b> وارد شده‌اید.
+</p>
+<p>
+    <a href="{% url "helios_auth.views.logout" %}">خروج</a>
+</p>
+
+{% else %}
+{% include "login_box.html" %}
+{% endif %}
+{% endblock %}

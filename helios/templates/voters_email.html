@@ -1,0 +1,65 @@
+{% extends TEMPLATE_BASE %}
+
+{% block title %}تماس با رای‌دهندگان برای {{election.name}}{% endblock %}
+{% block content %}
+<script>
+var voter_id = null;
+{% if voter %}
+voter_id = '{{voter.voter_id}}';
+{% endif %}
+</script>
+
+  <h2 class="title">{{election.name}} &mdash; تماس با رای‌دهندگان  <span style="font-size:0.7em;">[<a href="{% url "helios.views.one_election_view" election.uuid %}">بازگشت به انتخابات</a>]</span></h2>
+
+{% if voter %}  
+  <p>
+    شما در حال ارسال این ایمیل به کاربر مشخصی هستید: <b>{{voter.name}} ({{voter.voter_id}})</b>
+  </p>
+{% endif %}
+
+<p>
+<b>قالب</b>:
+
+{% for template_option in templates %}
+{% if template_option.0 == template %}
+<b>{{template_option.1}}</b>
+{% else %}
+<a href="?template={{template_option.0}}&voter_id={{voter.voter_login_id}}">{{template_option.1}}</a>
+{% endif %}
+&nbsp;&nbsp;&nbsp;
+{% endfor %}
+
+<pre style="margin:10px; border: 1px solid #888; padding:20px">
+عنوان: {{default_subject}}
+
+{{default_body|safe}}
+</pre>
+
+<p>
+شما می‌توانید به دلخواه خود قالب را تغییر دهید و فیلد‌های دلخواهی از زیر را اضافه کنید.
+</p>
+
+  <form class="prettyform" action="" method="POST" id="email_form">
+    <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+    <input type="hidden" name="template" value="{{template}}" />
+    <input type="hidden" name="voter_id" value="{{voter.voter_login_id}}" />
+    <table class="pretty">
+     {{email_form.as_table}}
+     </table>
+  <div>
+  <label for="">&nbsp;</label><input type="submit" value="ارسال" id="send_button" />
+  </div>
+  </form>
+  
+  <div id="processing">
+  </div>
+  
+  <div id="done" style="display:none;">
+    انجام شد، برو <a href="{% url "helios.views.one_election_view" election.uuid %}">بازگشت به انتخابات</a>.
+  </div>
+
+  <div id="error" style="display:none;">
+    خطا در ارسال ایمیل به مشترکان، تنظیمات SMTP سرور را بررسی کنید.
+  </div>
+
+{% endblock %}

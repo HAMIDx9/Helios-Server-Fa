@@ -1,0 +1,16 @@
+{% extends TEMPLATE_BASE %}
+
+{% block title %}محاسبه شمارش &mdash; {{election.name}}{% endblock %}
+{% block content %}
+  <h2 class="title">{{election.name}} &mdash; محاسبه شمارش <span style="font-size:0.7em;">[<a href="{% url "helios.views.one_election_view" election.uuid %}">لغو</a>]</span></h2>
+
+  <p>
+    شما در حال محاسبه شمارش برای این انتخابات هستید. تنها بعد از این اقدام نتایج را خواهید دید.
+  </p>
+
+  <form method="POST" action="">
+    <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+    <input type="submit" value="محاسبه شمارش!" />
+  </form>
+
+{% endblock %}
